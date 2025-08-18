@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Koalitionsrechner – Proportionale Sitzverteilung</title>
+<title>Koalitionsrechner – Zeitreise 1949–2025</title>
 <style>
   :root { --bg:#0b0f14; --card:#121823; --ink:#e8eef7; --muted:#a6b0bf; --ok:#37d07a; --bad:#ff6a6a; --radius:14px; }
   *{box-sizing:border-box}
@@ -55,14 +55,14 @@
   .ok{color:var(--ok)} .bad{color:var(--bad)}
   svg{display:block; width:100%; height:auto}
 
-  /* Animation immer beim (Re)Render – von unten links */
+  /* Animation beim (Re)Render – von unten links */
   .arc{opacity:1; transition:opacity .35s ease, transform .35s ease}
   .arc.enter{opacity:0; transform:translate(-18px,22px) scale(0.96)}
 </style>
 </head>
 <body>
   <h1>Koalitionsrechner – Proportionale Sitzverteilung</h1>
-  <p class="sub">Koalition links im Halbkreis – animiert bei jedem Klick oder Preset.</p>
+  <p class="sub">1949–2025, Koalitionen testen, Presets – mit Animation.</p>
 
   <div class="wrap">
     <!-- Eingaben -->
@@ -93,6 +93,26 @@
 
       <div class="muted" style="margin:6px 0 4px">Parteien & Prozentwerte (Name, % und Farbe frei wählbar)</div>
       <div id="partyList"></div>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.08); margin:14px 0">
+      <h3 style="margin:4px 0 8px">🕰️ Zeitreise – historische Ergebnisse</h3>
+      <div class="row">
+        <div>
+          <label>Historische Presets (1949–2025)</label>
+          <select id="historyPreset"></select>
+        </div>
+        <div>
+          <label>Eigenes CSV/JSON</label>
+          <input id="historyFile" type="file" accept=".csv,.json">
+        </div>
+      </div>
+      <div class="row">
+        <button id="loadPresetBtn" type="button">Preset laden</button>
+        <button id="loadFileBtn" class="secondary" type="button">Datei importieren</button>
+      </div>
+      <p class="sub" style="font-size:12px; margin-top:4px">
+        CSV-Format: <code>name,pct,color[,exception]</code> – Beispiel: <code>SPD,25.7,#E3000F,true</code>
+      </p>
     </section>
 
     <!-- Visualisierung -->
@@ -125,14 +145,167 @@
             <option value="Rot-Grün-Rot">Rot-Grün-Rot</option>
             <option value="Grün-Rot-Rot">Grün-Rot-Rot</option>
             <option value="SPD-BSW">SPD-BSW</option>
+            <!-- Neue Presets -->
+            <option value="Rot-Grün">Rot-Grün</option>
+            <option value="Sozialliberale Koalition">Sozialliberale Koalition</option>
+            <option value="Grün-Liberale Koalition">Grün-Liberale Koalition</option>
+            <option value="Rot-Rote Koalition">Rot-Rote Koalition</option>
           </select>
         </div>
       </div>
     </section>
   </div>
 
+<!-- ===== Datensätze 1949–2025 (kompakt) ===== -->
+<script id="HIST_DATA" type="application/json">
+{
+  "1949": [
+    {"name":"CDU/CSU","pct":31.0,"color":"#000000"},
+    {"name":"SPD","pct":29.2,"color":"#E3000F"},
+    {"name":"FDP","pct":11.9,"color":"#FFED00"},
+    {"name":"KPD","pct":5.7,"color":"#BF0000"},
+    {"name":"BP","pct":4.2,"color":"#888888"},
+    {"name":"DP","pct":4.0,"color":"#888888"},
+    {"name":"Zentrum","pct":3.1,"color":"#999999"},
+    {"name":"WAV","pct":2.9,"color":"#999999"}
+  ],
+  "1953": [
+    {"name":"CDU/CSU","pct":45.2,"color":"#000000"},
+    {"name":"SPD","pct":28.8,"color":"#E3000F"},
+    {"name":"FDP","pct":9.5,"color":"#FFED00"},
+    {"name":"GB/BHE","pct":5.9,"color":"#999999"},
+    {"name":"DP","pct":3.3,"color":"#999999"},
+    {"name":"BP","pct":3.1,"color":"#888888"}
+  ],
+  "1957": [
+    {"name":"CDU/CSU","pct":50.2,"color":"#000000"},
+    {"name":"SPD","pct":31.8,"color":"#E3000F"},
+    {"name":"FDP","pct":7.7,"color":"#FFED00"}
+  ],
+  "1961": [
+    {"name":"CDU/CSU","pct":45.3,"color":"#000000"},
+    {"name":"SPD","pct":36.2,"color":"#E3000F"},
+    {"name":"FDP","pct":12.8,"color":"#FFED00"}
+  ],
+  "1965": [
+    {"name":"CDU/CSU","pct":47.6,"color":"#000000"},
+    {"name":"SPD","pct":39.3,"color":"#E3000F"},
+    {"name":"FDP","pct":9.5,"color":"#FFED00"},
+    {"name":"NPD","pct":2.0,"color":"#777777"}
+  ],
+  "1969": [
+    {"name":"CDU/CSU","pct":46.1,"color":"#000000"},
+    {"name":"SPD","pct":42.7,"color":"#E3000F"},
+    {"name":"FDP","pct":5.8,"color":"#FFED00"},
+    {"name":"NPD","pct":4.3,"color":"#777777"}
+  ],
+  "1972": [
+    {"name":"SPD","pct":45.8,"color":"#E3000F"},
+    {"name":"CDU/CSU","pct":44.9,"color":"#000000"},
+    {"name":"FDP","pct":8.4,"color":"#FFED00"}
+  ],
+  "1976": [
+    {"name":"CDU/CSU","pct":48.6,"color":"#000000"},
+    {"name":"SPD","pct":42.6,"color":"#E3000F"},
+    {"name":"FDP","pct":7.9,"color":"#FFED00"}
+  ],
+  "1980": [
+    {"name":"CDU/CSU","pct":44.5,"color":"#000000"},
+    {"name":"SPD","pct":42.9,"color":"#E3000F"},
+    {"name":"FDP","pct":10.6,"color":"#FFED00"}
+  ],
+  "1983": [
+    {"name":"CDU/CSU","pct":48.8,"color":"#000000"},
+    {"name":"SPD","pct":38.2,"color":"#E3000F"},
+    {"name":"FDP","pct":7.0,"color":"#FFED00"},
+    {"name":"Grüne","pct":5.6,"color":"#1FA12E"}
+  ],
+  "1987": [
+    {"name":"CDU/CSU","pct":44.3,"color":"#000000"},
+    {"name":"SPD","pct":37.0,"color":"#E3000F"},
+    {"name":"FDP","pct":9.1,"color":"#FFED00"},
+    {"name":"Grüne","pct":8.3,"color":"#1FA12E"}
+  ],
+  "1990": [
+    {"name":"CDU/CSU","pct":43.8,"color":"#000000"},
+    {"name":"SPD","pct":33.5,"color":"#E3000F"},
+    {"name":"FDP","pct":11.0,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":5.1,"color":"#1FA12E"},
+    {"name":"PDS","pct":2.4,"color":"#BE3075"},
+    {"name":"REP","pct":2.1,"color":"#777777"}
+  ],
+  "1994": [
+    {"name":"CDU/CSU","pct":41.4,"color":"#000000"},
+    {"name":"SPD","pct":36.4,"color":"#E3000F"},
+    {"name":"FDP","pct":6.9,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":7.3,"color":"#1FA12E"},
+    {"name":"PDS","pct":4.4,"color":"#BE3075"}
+  ],
+  "1998": [
+    {"name":"SPD","pct":40.9,"color":"#E3000F"},
+    {"name":"CDU/CSU","pct":35.1,"color":"#000000"},
+    {"name":"FDP","pct":6.2,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":6.7,"color":"#1FA12E"},
+    {"name":"PDS","pct":5.1,"color":"#BE3075"}
+  ],
+  "2002": [
+    {"name":"SPD","pct":38.5,"color":"#E3000F"},
+    {"name":"CDU/CSU","pct":38.5,"color":"#000000"},
+    {"name":"FDP","pct":7.4,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":8.6,"color":"#1FA12E"},
+    {"name":"PDS","pct":4.0,"color":"#BE3075"}
+  ],
+  "2005": [
+    {"name":"CDU/CSU","pct":35.2,"color":"#000000"},
+    {"name":"SPD","pct":34.2,"color":"#E3000F"},
+    {"name":"FDP","pct":9.8,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":8.1,"color":"#1FA12E"},
+    {"name":"Linke/PDS","pct":8.7,"color":"#BE3075"}
+  ],
+  "2009": [
+    {"name":"CDU/CSU","pct":33.8,"color":"#000000"},
+    {"name":"SPD","pct":23.0,"color":"#E3000F"},
+    {"name":"FDP","pct":14.6,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":10.7,"color":"#1FA12E"},
+    {"name":"Linke","pct":11.9,"color":"#BE3075"}
+  ],
+  "2013": [
+    {"name":"CDU/CSU","pct":41.5,"color":"#000000"},
+    {"name":"SPD","pct":25.7,"color":"#E3000F"},
+    {"name":"Grüne/B90","pct":8.4,"color":"#1FA12E"},
+    {"name":"Linke","pct":8.6,"color":"#BE3075"},
+    {"name":"AfD","pct":4.7,"color":"#009EE0"}
+  ],
+  "2017": [
+    {"name":"CDU/CSU","pct":32.9,"color":"#000000"},
+    {"name":"SPD","pct":20.5,"color":"#E3000F"},
+    {"name":"FDP","pct":10.7,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":8.9,"color":"#1FA12E"},
+    {"name":"Linke","pct":9.2,"color":"#BE3075"},
+    {"name":"AfD","pct":12.6,"color":"#009EE0"}
+  ],
+  "2021": [
+    {"name":"SPD","pct":25.7,"color":"#E3000F"},
+    {"name":"CDU/CSU","pct":24.1,"color":"#000000"},
+    {"name":"Grüne/B90","pct":14.8,"color":"#1FA12E"},
+    {"name":"FDP","pct":11.5,"color":"#FFED00"},
+    {"name":"AfD","pct":10.3,"color":"#009EE0"},
+    {"name":"Linke","pct":4.9,"color":"#BE3075","exception":true}
+  ],
+  "2025": [
+    {"name":"CDU/CSU","pct":28.6,"color":"#000000"},
+    {"name":"SPD","pct":16.4,"color":"#E3000F"},
+    {"name":"FDP","pct":4.3,"color":"#FFED00"},
+    {"name":"Grüne/B90","pct":11.6,"color":"#1FA12E"},
+    {"name":"Linke","pct":8.8,"color":"#BE3075"},
+    {"name":"AfD","pct":20.8,"color":"#009EE0"},
+    {"name":"SSW","pct":0.2,"color":"#66CCFF","exception":true}
+  ]
+}
+</script>
+
 <script>
-/* ----- Polyfill: CSS.escape (für Safari/iOS) ----- */
+/* Polyfill: CSS.escape (Safari) */
 if (!window.CSS || typeof CSS.escape !== "function") {
   window.CSS = window.CSS || {};
   CSS.escape = function (value) {
@@ -143,20 +316,25 @@ if (!window.CSS || typeof CSS.escape !== "function") {
   };
 }
 
-/* ===== Presets ===== */
+/* ===== Presets (Koalitionsnamen) ===== */
 const PRESETS = {
   "Schwarz-Rot (Groko)":     ["CDU/CSU","SPD"],
-  "Schwarz-Grün":            ["CDU/CSU","Grüne"],
+  "Schwarz-Grün":            ["CDU/CSU","Grüne","Grüne/B90"],
   "Schwarz-Gelb":            ["CDU/CSU","FDP"],
-  "Jamaika-Koalition":       ["CDU/CSU","FDP","Grüne"],
+  "Jamaika-Koalition":       ["CDU/CSU","FDP","Grüne","Grüne/B90"],
   "Deutschland-Koalition":   ["CDU/CSU","SPD","FDP"],
-  "Ampel-Koalition":         ["SPD","Grüne","FDP"],
-  "Kenia-Koalition":         ["CDU/CSU","SPD","Grüne"],
+  "Ampel-Koalition":         ["SPD","Grüne","Grüne/B90","FDP"],
+  "Kenia-Koalition":         ["CDU/CSU","SPD","Grüne","Grüne/B90"],
   "Brombeer-Koalition":      ["SPD","Linke","BSW"],
-  "Rot-Rot-Grün":            ["SPD","Linke","Grüne"],
-  "Rot-Grün-Rot":            ["SPD","Linke","Grüne"],
-  "Grün-Rot-Rot":            ["SPD","Linke","Grüne"],
-  "SPD-BSW":                 ["SPD","BSW"]
+  "Rot-Rot-Grün":            ["SPD","Linke","Grüne","Grüne/B90"],
+  "Rot-Grün-Rot":            ["SPD","Linke","Grüne","Grüne/B90"],
+  "Grün-Rot-Rot":            ["SPD","Linke","Grüne","Grüne/B90"],
+  "SPD-BSW":                 ["SPD","BSW"],
+  /* NEU */
+  "Rot-Grün":                ["SPD","Grüne","Grüne/B90"],
+  "Sozialliberale Koalition":["SPD","FDP"],
+  "Grün-Liberale Koalition": ["Grüne","Grüne/B90","FDP"],
+  "Rot-Rote Koalition":      ["SPD","Linke"]
 };
 
 /* ===== Helpers & State ===== */
@@ -164,19 +342,18 @@ const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 let selectedCoalition = new Set();
 const GREY = "#b7bdc7";
-
-function normName(n){ return (n||"").toString().trim().toLowerCase().replace(/\s+/g,""); }
-function isOther(name){ const n=normName(name); return n==="andere" || n==="sonstige"; }
+function norm(n){ return (n||"").toString().trim().toLowerCase().replace(/\s+/g,""); }
+function isOther(name){ const n=norm(name); return n==="andere" || n==="sonstige"; }
 
 /* ===== Defaults ===== */
 const defaultParties = [
-  {name:"CDU/CSU", color:"#000000", pct:28, exception:false},
-  {name:"SPD",     color:"#E3000F", pct:17, exception:false},
-  {name:"Grüne",   color:"#1FA12E", pct:12, exception:false},
-  {name:"FDP",     color:"#FFED00", pct:6,  exception:false},
-  {name:"AfD",     color:"#009EE0", pct:20, exception:false},
-  {name:"Linke",   color:"#BE3075", pct:6,  exception:false},
-  {name:"BSW",     color:"#FF6A00", pct:7,  exception:false}
+  {name:"CDU/CSU", color:"#000000", pct:28},
+  {name:"SPD",     color:"#E3000F", pct:17},
+  {name:"Grüne",   color:"#1FA12E", pct:12},
+  {name:"FDP",     color:"#FFED00", pct:6},
+  {name:"AfD",     color:"#009EE0", pct:20},
+  {name:"Linke",   color:"#BE3075", pct:6},
+  {name:"BSW",     color:"#FF6A00", pct:7}
 ];
 
 /* ===== UI ===== */
@@ -196,9 +373,12 @@ function addPartyRow(p = {name:"Neue Partei", color:"#8888ff", pct:0, exception:
   $("#partyList").appendChild(row);
   row.querySelectorAll("input").forEach(inp=>inp.addEventListener("change", calcAndRender));
 }
-function setDefaults(){
+function setPartyList(list){
   $("#partyList").innerHTML="";
-  defaultParties.forEach(addPartyRow);
+  list.forEach(addPartyRow);
+}
+function setDefaults(){
+  setPartyList(defaultParties);
   selectedCoalition = new Set();
   calcAndRender();
 }
@@ -208,7 +388,7 @@ function filterByThreshold(parties, threshold, exceptions){
   return parties.filter(p =>
     !isOther(p.name) &&
     p.pct > 0 &&
-    (p.pct >= threshold || p.exception || exceptions.includes(p.name))
+    (p.pct >= threshold || p.exception || (exceptions||[]).includes(p.name))
   );
 }
 function sls(parties,seats){
@@ -233,14 +413,14 @@ function hareNiemeyer(parties,seats){
 function allocateSeats(p,s,m){ if(m==="dhondt") return dhondt(p,s); if(m==="hare") return hareNiemeyer(p,s); return sls(p,s); }
 
 function computeSeats(parties,seats,threshold,exceptions,method){
-  const clean = parties.map(p => isOther(p.name)?{...p,pct:0}:p);        // Andere: 0%
+  const clean = parties.map(p => isOther(p.name)?{...p,pct:0}:p);
   const ok = filterByThreshold(clean, threshold, exceptions);
   const result = clean.map(p=>({...p,seats:0}));
   if(ok.length){
     const counts = allocateSeats(ok, seats, method);
     ok.forEach((p,i)=>{ const j=result.findIndex(q=>q.name===p.name); if(j>=0) result[j].seats = counts[i]; });
   }
-  result.forEach(p=>{ if(isOther(p.name)) p.seats=0; });                 // Sicherheit
+  result.forEach(p=>{ if(isOther(p.name)) p.seats=0; });
   return result;
 }
 
@@ -248,7 +428,7 @@ function computeSeats(parties,seats,threshold,exceptions,method){
 function layoutArcs(data,total,sel){
   const coal = data.filter(p=>p.seats>0 && sel.has(p.name));
   const rest = data.filter(p=>p.seats>0 && !sel.has(p.name));
-  const ordered = [...coal, ...rest];                                    // Koalition links
+  const ordered = [...coal, ...rest];
   const sum = ordered.reduce((a,b)=>a+b.seats,0) || total;
   let start = Math.PI;
   return ordered.map(p=>{
@@ -267,9 +447,9 @@ function arcD(r1,r2,a0,a1){
   return `M${x0} ${y0}A${r1} ${r1} 0 ${large} 1 ${x1} ${y1}L${x1i} ${y1i}A${r2} ${r2} 0 ${large} 0 ${x0i} ${y0i}Z`;
 }
 function drawHalfRing(svg,data,total,sel){
-  const w=900,h=650,cx=w/2,cy=h*0.86;            // tief genug, nichts abgeschnitten
-  const ringWidth=180, rO=280, rI=rO-ringWidth;  // dicker Halbkreis
-  svg.innerHTML="";                               // immer neu -> Animation sicher
+  const w=900,h=650,cx=w/2,cy=h*0.86;
+  const ringWidth=180, rO=280, rI=rO-ringWidth;
+  svg.innerHTML="";
   svg.setAttribute("viewBox","0 0 900 650");
   svg.setAttribute("preserveAspectRatio","xMidYMin meet");
 
@@ -306,7 +486,6 @@ function renderLegend(d){
 function renderChecklist(d){
   const wrap=$("#coalitionChecklist"); wrap.innerHTML="";
   const shown = d.filter(p=>p.seats>0 && !isOther(p.name)).map(p=>p.name);
-  // alte Auswahl säubern
   selectedCoalition = new Set([...selectedCoalition].filter(n=>shown.includes(n)));
   d.filter(p=>p.seats>0 && !isOther(p.name)).forEach(p=>{
     const lab=document.createElement("label");
@@ -318,7 +497,7 @@ function renderChecklist(d){
     cb.addEventListener("change", ()=>{
       const n=cb.dataset.name;
       if(cb.checked) selectedCoalition.add(n); else selectedCoalition.delete(n);
-      calcAndRender(); // neu zeichnen -> Animation
+      calcAndRender();
     });
   });
 }
@@ -333,6 +512,29 @@ function recomputeCoalitionSum(){
   const ok = sum>=majority;
   $("#coalMajority").textContent = ok ? "ja" : "nein";
   $("#coalMajority").className   = ok ? "ok" : "bad";
+}
+
+/* ===== History Handling ===== */
+function getHistData(){
+  try{ return JSON.parse(document.getElementById("HIST_DATA").textContent); }
+  catch(e){ console.error(e); return {}; }
+}
+function fillHistoryDropdown(){
+  const hist = getHistData();
+  const sel = $("#historyPreset");
+  sel.innerHTML = '<option value="">– wählen –</option>' +
+    Object.keys(hist).sort().map(y=>`<option value="${y}">${y}</option>`).join('');
+}
+function applyHistory(year){
+  const hist=getHistData(); const list=hist[year]; if(!list) return;
+  setPartyList(list); selectedCoalition = new Set(); calcAndRender();
+}
+function parseCSV(text){
+  const rows=text.trim().split(/\r?\n/);
+  return rows.map(r=>{
+    const [name,pct,color,exc] = r.split(",").map(s=>s.trim());
+    return {name, pct:parseFloat(pct)||0, color:color||"#8888ff", exception: String(exc||"").toLowerCase()==="true"};
+  });
 }
 
 /* ===== Haupt-Loop ===== */
@@ -352,15 +554,19 @@ function readInputs(){
     parties
   };
 }
+function computeAndOrder(parties,totalSeats,threshold,exceptions,method){
+  const seatsData = computeSeats(parties,totalSeats,threshold,exceptions,method);
+  const shown = seatsData.filter(p => (!isOther(p.name)) && (p.pct >= 2 || (p.seats||0)>0));
+  return shown;
+}
 function calcAndRender(){
   const {totalSeats,threshold,method,exceptions,parties}=readInputs();
-  const seatsData = computeSeats(parties,totalSeats,threshold,exceptions,method);
-  const shown = seatsData.filter(p=>p.seats>0 && !isOther(p.name));
+  const shown = computeAndOrder(parties,totalSeats,threshold,exceptions,method);
   window.__lastSeats = shown;
-
   drawHalfRing($("#seatChart"), shown, totalSeats, selectedCoalition);
   renderLegend(shown);
   renderChecklist(shown);
+  $("#majorityLbl").textContent = (Math.floor(totalSeats/2)+1).toString();
   recomputeCoalitionSum();
 }
 
@@ -373,15 +579,37 @@ $("#threshold").addEventListener("change", calcAndRender);
 $("#method").addEventListener("change", calcAndRender);
 $("#exceptions").addEventListener("change", calcAndRender);
 
-// Preset-Auswahl
+// Preset-Auswahl (Koalition)
 $("#presetCoalition").addEventListener("change", ()=>{
   const key = $("#presetCoalition").value;
   selectedCoalition = key ? new Set(PRESETS[key] || []) : new Set();
-  calcAndRender(); // triggert Animation & UI
+  calcAndRender();
+});
+
+// History
+fillHistoryDropdown();
+$("#loadPresetBtn").addEventListener("click", ()=>{
+  const y = $("#historyPreset").value; if(!y) return;
+  applyHistory(y);
+});
+$("#loadFileBtn").addEventListener("click", async ()=>{
+  const f = $("#historyFile").files[0]; if(!f) return;
+  const txt = await f.text();
+  let list = [];
+  try{
+    if(f.name.endsWith(".json")) list = JSON.parse(txt);
+    else list = parseCSV(txt);
+  }catch(e){ alert("Datei konnte nicht gelesen werden."); return; }
+  setPartyList(list); selectedCoalition=new Set(); calcAndRender();
 });
 
 /* ===== Init ===== */
 setDefaults();
 </script>
+
+<!-- Quellenhinweis (optional im Code belassen)
+  Basisdaten: Deutscher Bundestag – „Bundestagswahlergebnisse seit 1949 – Zweitstimmen“.
+  Ergänzungen >2% (z. B. NPD 1969, REP 1990) aus Material der Bundeswahlleiterin.
+-->
 </body>
 </html>
