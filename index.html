@@ -772,80 +772,18 @@ const x = d3.scaleBand()
     .range([margin.left, w-margin.right])
     .padding(0.25);
 
+// Skala für Höhe – max 10% mehr als höchster Wert
 const y = d3.scaleLinear()
-    .domain([0, d3.max(data, d=>d.value)*1.2])
-    .range([h-margin.bottom, margin.top]);
+    .domain([0, d3.max(data, d => d.value) * 1.1])  
+    .range([h - margin.bottom, margin.top]);
 
-// Achsen
-svg.append("g")
-   .attr("transform",`translate(0,${h-margin.bottom})`)
-   .call(d3.axisBottom(x).tickSizeOuter(0))
-   .selectAll("text").style("fill","white");
-
-svg.append("g")
-   .attr("transform",`translate(${margin.left},0)`)
-   .call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+"%"))
-   .selectAll("text").style("fill","white");
-
-// Balken vorbereiten (alle bei 0 Höhe)
-svg.selectAll(".bar")
-  .data(data)
-  .enter().append("rect")
-    .attr("class","bar")
-    .attr("x", d=>x(d.name))
-    .attr("y", y(0))
-    .attr("width", x.bandwidth())
-    .attr("height", 0)
-    .attr("fill", d=>d.color)
-    .on("click", animateBar);
-
-// Labels
+// Prozentzahlen über den Balken
 svg.selectAll(".label")
   .data(data)
-  .enter().append("text")
-    .attr("class","label")
-    .attr("x", d=>x(d.name) + x.bandwidth()/2)
-    .attr("y", y(0)-5)
-    .attr("text-anchor","middle")
-    .text("");
-
-// Animation einer Partei
-function animateBar(event, d){
-  const bar = d3.select(this);
-  const label = svg.selectAll(".label").filter(l=>l.name===d.name);
-  bar.transition().duration(800)
-    .attr("y", y(d.value))
-    .attr("height", y(0)-y(d.value));
-  label.transition().duration(800)
-    .attr("y", Math.max(y(d.value)-5, margin.top+15)) // Zahl bleibt IM KASTEN
-    .tween("text", function(){
-      const i = d3.interpolateNumber(0,d.value);
-      return function(t){ this.textContent = i(t).toFixed(1)+"%"; };
-    });
-}
-
-// Reset
-function resetBars(){
-  svg.selectAll(".bar")
-    .transition().duration(500)
-    .attr("y", y(0))
-    .attr("height", 0);
-  svg.selectAll(".label")
-    .transition().duration(500)
-    .attr("y", y(0)-5)
-    .text("");
-}
-
-// Alle animieren
-function animateAll(){
-  data.forEach((d,i)=>{
-    setTimeout(()=>{
-      svg.selectAll(".bar").filter(b=>b.name===d.name).each(animateBar);
-    }, i*400);
-  });
-}
-</script>
-</body>
-</html>
-
-
+  .join("text")
+  .attr("class", "label")
+  .attr("x", d => x(d.name) + x.bandwidth()/2)
+  .attr("y", d => y(d.value) - 5)   // 5px über Balken
+  .attr("text-anchor", "middle")
+  .text(d => d.value.toFixed(1) + "%")
+  .style("opacity", 0);
